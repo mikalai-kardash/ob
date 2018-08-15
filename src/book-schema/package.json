@@ -1,0 +1,17 @@
+{
+  "name": "book-schema",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "typescript-to-json-schema --path src/index.ts --type Book > ./book.json"
+  },
+  "author": "Mikalai Kardash <mikalai.kardash@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "3.0.1"
+  },
+  "devDependencies": {
+    "typescript-to-json-schema": "0.6.0"
+  }
+}
