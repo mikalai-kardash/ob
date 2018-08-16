@@ -1,3 +1,13 @@
 {
-    "$schema": ""
+    "$schema": "",
+    "name": "Book Title",
+    "cover": "./pages/cover",
+    "pages": [
+        "./pages/page1",
+        "./pages/page2",
+        {
+            "title": "Chapter 1",
+            "index": "./chapters/ch01/index"
+        }
+    ]
 }
