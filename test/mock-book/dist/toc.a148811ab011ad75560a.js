@@ -81,19 +81,19 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/book.json");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/pages/toc.md");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/book.json":
-/*!***********************!*\
-  !*** ./src/book.json ***!
-  \***********************/
-/*! exports provided: $schema, name, cover, pages, default */
-/***/ (function(module) {
+/***/ "./src/pages/toc.md":
+/*!**************************!*\
+  !*** ./src/pages/toc.md ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-eval("module.exports = {\"$schema\":\"\",\"name\":\"Book Title\",\"cover\":\"./pages/cover\",\"pages\":[\"./pages/page1\",\"./pages/page2\",{\"title\":\"Chapter 1\",\"index\":\"./chapters/ch01/index\"}]};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvYm9vay5qc29uLmpzIiwic291cmNlcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/book.json\n");
+eval("module.exports = \"<h1 id=\\\"table-of-contents\\\">Table of Contents</h1>\\n\";//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvcGFnZXMvdG9jLm1kLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vLy4vc3JjL3BhZ2VzL3RvYy5tZD8wYTZmIl0sInNvdXJjZXNDb250ZW50IjpbIm1vZHVsZS5leHBvcnRzID0gXCI8aDEgaWQ9XFxcInRhYmxlLW9mLWNvbnRlbnRzXFxcIj5UYWJsZSBvZiBDb250ZW50czwvaDE+XFxuXCI7Il0sIm1hcHBpbmdzIjoiQUFBQSIsInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///./src/pages/toc.md\n");
 
 /***/ })
 

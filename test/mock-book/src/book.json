@@ -1,13 +1,23 @@
 {
     "$schema": "",
-    "name": "Book Title",
     "cover": "./pages/cover",
+    "license": "./license",
     "pages": [
+        "./license",
         "./pages/page1",
         "./pages/page2",
+        "./pages/toc",
         {
             "title": "Chapter 1",
             "index": "./chapters/ch01/index"
         }
-    ]
+    ],
+    "@metadata": {
+        "title": "Algorithms",
+        "version": "0.1.0",
+        "pages": "markdown",
+        "authors": [
+            "Umesh Vazirani <vazirani@cs.berkeley.edu>"
+        ]
+    }
 }
