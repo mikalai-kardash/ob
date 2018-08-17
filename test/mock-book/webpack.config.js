@@ -32,7 +32,6 @@ book.pages = book.pages.map(p => {
 const entry = {
     cover: book.cover.index,
     license: book.license.index,
-    book: path.resolve(root, 'book.json'),
     styles: path.resolve(root, './styles/global.scss'),
 };
 
