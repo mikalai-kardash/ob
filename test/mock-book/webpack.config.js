@@ -68,7 +68,25 @@ module.exports = {
                         loader: 'url-loader?limit=5000'
                     },
                     {
-                        loader: 'img-loader'
+                        loader: 'img-loader',
+                        options: {
+                            plugins: [
+                                require('imagemin-gifsicle')({
+                                    interlaced: false
+                                }),
+                                require('imagemin-mozjpeg')({
+                                    progressive: true,
+                                    arithmetic: false
+                                }),
+                                require('imagemin-optipng')({}),
+                                require('imagemin-svgo')({
+                                    plugins: [
+                                        { removeTitle: true },
+                                        { convertPathData: false }
+                                    ]
+                                })
+                            ]
+                        }
                     }
                 ]
             }
