@@ -1,5 +1,5 @@
-const book = require('./src/book.json');
 const path = require('path');
+const book = require('./src/book.json');
 const clean = require('clean-webpack-plugin');
 
 const root = './src';
@@ -30,14 +30,15 @@ book.pages = book.pages.map(p => {
 });
 
 const entry = {
-    cover: book.cover.index,
-    license: book.license.index,
-    styles: path.resolve(root, './styles/global.scss'),
+    book: path.resolve('./src/book.json'),
+    // cover: book.cover.index,
+    // license: book.license.index,
+    // styles: path.resolve(root, './styles/global.scss'),
 };
 
-book.pages.forEach(p => {
-    entry[p.title] = p.index;
-});
+// book.pages.forEach(p => {
+//     entry[p.title] = p.index;
+// });
 
 module.exports = {
 
@@ -49,6 +50,29 @@ module.exports = {
 
     module: {
         rules: [
+            {
+                test: /book\.json/i,
+                type: 'json',
+                use: [
+                    {
+                        loader: path.resolve('./book-loader.js'),
+                    }
+                ]
+            },
+            {
+                test: /\.scss/i,
+                use: [
+                    {
+                        loader: 'style-loader'
+                    },
+                    {
+                        loader: 'css-loader'
+                    },
+                    {
+                        loader: 'sass-loader'
+                    },
+                ]
+            },
             {
                 test: /\.md$/i,
                 use: [
