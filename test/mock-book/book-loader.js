@@ -70,6 +70,8 @@ const getLoadableContent = (book) => {
 };
 
 module.exports = function (contents) {
+    console.log('loader - start');
+
     const api = this;
     const callback = api.async();
 
@@ -88,6 +90,9 @@ module.exports = function (contents) {
 
     Promise
         .all(promises)
-        .then(() => { callback(null, JSON.stringify(fixed)); })
+        .then(() => { 
+            callback(null, JSON.stringify(fixed)); 
+            console.log('loader - end');
+        })
         .catch(e => callback(e));
 }

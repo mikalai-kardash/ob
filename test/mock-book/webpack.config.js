@@ -1,66 +1,33 @@
+"use strict";
+
 const path = require('path');
-const book = require('./src/book.json');
-const clean = require('clean-webpack-plugin');
-
-const root = './src';
-const out = './dist';
-
-const rootPath = (p) => {
-    return path.resolve(root, p + '.md');
-};
-
-const pageConvention = (page) => {
-
-    if (typeof page === "string") {
-        return {
-            "index": rootPath(page),
-            "title": page.substring(page.lastIndexOf('/') + 1)
-        };
-    }
-
-    page.index = rootPath(page.index);
-
-    return page;
-};
-
-book.cover = pageConvention(book.cover);
-book.license = pageConvention(book.license);
-book.pages = book.pages.map(p => {
-    return pageConvention(p);
-});
-
-const entry = {
-    book: path.resolve('./src/book.json'),
-    // cover: book.cover.index,
-    // license: book.license.index,
-    // styles: path.resolve(root, './styles/global.scss'),
-};
-
-// book.pages.forEach(p => {
-//     entry[p.title] = p.index;
-// });
+const BookPlugin = require('./book-plugin');
 
 module.exports = {
 
-    entry,
+    entry: {
+        book: './src/book.json'
+    },
+
+    target: 'web',
 
     plugins: [
-        new clean([path.resolve(out)])
+        new BookPlugin()
     ],
 
     module: {
         rules: [
             {
-                test: /book\.json/i,
+                test: /book\.json$/i,
                 type: 'json',
                 use: [
                     {
-                        loader: path.resolve('./book-loader.js'),
+                        loader: './book-loader.js',
                     }
                 ]
             },
             {
-                test: /\.scss/i,
+                test: /\.scss$/i,
                 use: [
                     {
                         loader: 'style-loader'
@@ -117,8 +84,7 @@ module.exports = {
     },
 
     output: {
-        path: path.resolve(out),
+        path: path.resolve('./dist'),
         filename: '[name].[hash].js'
     }
-
 };

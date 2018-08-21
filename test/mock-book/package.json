@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "book for testing",
   "scripts": {
-    "start": "webpack --run-dev"
+    "build": "rimraf ./dist && webpack --config webpack.config.js --run-dev",
+    "debug": "node --inspect-brk ./node_modules/webpack/bin/webpack.js --config webpack.config.js"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +29,7 @@
     "loader-utils": "^1.1.0",
     "markdown-loader": "3.0.0",
     "node-sass": "^4.9.3",
+    "rimraf": "^2.6.2",
     "sass-loader": "^7.1.0",
     "schema-utils": "^1.0.0",
     "style-loader": "^0.22.1",
