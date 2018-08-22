@@ -227,6 +227,37 @@ class TracePlugin {
                 log(`  ${modules.length} modules`);
                 footer();
             });
+
+            compilation.hooks.optimizeChunksBasic.tap(PLUGIN, (chunks, chunkGroups) => {
+                header('compilation', 'afterOptimizeModules');
+                footer();
+            });
+
+            compilation.hooks.optimizeChunks.tap(PLUGIN, (chunks, chunkGroups) => {
+                header('compilation', 'optimizeChunks');
+                footer();
+            });
+
+            compilation.hooks.optimizeChunksAdvanced.tap(PLUGIN, (chunks, chunkGroups) => {
+                header('compilation', 'optimizeChunksAdvanced');
+                footer();
+            });
+
+            compilation.hooks.afterOptimizeChunks.tap(PLUGIN, (chunks, chunkGroups) => {
+                header('compilation', 'afterOptimizeChunks');
+                footer();
+            });
+
+            compilation.hooks.optimizeTree.tapAsync(PLUGIN, (chunks, modules, cb) => {
+                header('compilation', 'optimizeTree');
+                footer();
+                return cb();
+            });
+
+            compilation.hooks.afterOptimizeTree.tap(PLUGIN, (chunks, modules) => {
+                header('compilation', 'afterOptimizeTree');
+                footer();
+            });
         });
 
         compiler.hooks.compilation.tap(PLUGIN, (compilation, params) => {
