@@ -2,6 +2,7 @@
 
 const path = require('path');
 const BookPlugin = require('./book-plugin');
+const TracePlugin = require('./trace-plugin');
 
 module.exports = {
 
@@ -12,7 +13,8 @@ module.exports = {
     target: 'web',
 
     plugins: [
-        new BookPlugin()
+        new BookPlugin(),
+        new TracePlugin()
     ],
 
     module: {

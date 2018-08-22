@@ -1,7 +1,6 @@
 "use strict";
 
 const PLUGIN = "BookPlugin";
-const wp = require('webpack');
 
 // const BookDependency = require('./book-dependency');
 
@@ -50,7 +49,6 @@ function compilerCompilation(options) {
 
         compilation.hooks.finishModules.tap(PLUGIN, () => {
             console.log('compilation - finishModules ');
-            debugger;
         });
     };
 }
