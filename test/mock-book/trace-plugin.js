@@ -1,7 +1,15 @@
 "use strict";
 
-const PLUGIN = 'TracePlugin';
 const chalk = require('chalk');
+const figures = require('figures');
+const template = require('lodash').template;
+const columnify = require('columnify');
+const symbols = require('log-symbols');
+const indentString = require('indent-string');
+
+// const symbols = require('log-symbols');
+
+const PLUGIN = 'TracePlugin';
 const log = console.log;
 
 const DEFAULT_OPTIONS = {
@@ -11,7 +19,7 @@ const DEFAULT_OPTIONS = {
             // all: true,
             // beforeCompile: true,
             // compile: true,
-            // afterCompile: true,
+            afterCompile: true,
             // done: true,
             // thisCompilation: true,
             // compilation: true,
@@ -32,13 +40,93 @@ const DEFAULT_OPTIONS = {
     }
 };
 
-function header(target, event) {
-    const b = chalk.bgBlack;
-    const t = chalk.underline.dim;
-    const e = chalk.cyan.bold;
-    const message = `${t(target.toLowerCase())} ${e(event)}`;
+const DEFAULT_THEME = {
+    event: chalk.bgBlack,
+    eventTarget: chalk.cyan.bold,
+    eventSource: chalk.bgWhite.black.bold,
+};
 
-    log(b(message));
+function header(target, event, theme = DEFAULT_THEME) {
+    const s = target.toUpperCase();
+    const t = event;
+    const message = `${theme.eventSource(s)} ${theme.eventTarget(t)}`;
+    log(theme.event(message));
+}
+
+function list(arr, options = { title: '' }, theme = {
+    title: chalk.underline,
+    regular: chalk.magenta
+}) {
+    const render = template(`<% _.each(list, function(item) { %><%= bullet %> <%= theme.regular(item) %>\n<% }); %>`);
+
+    if (options.title) {
+        log(theme.title(options.title));
+    }
+
+    log(indentString(render({
+        list: arr,
+        bullet: figures.bullet,
+        theme,
+        options,
+    }), 2));
+
+    log('');
+}
+
+function table(
+    arr,
+    options = {
+        title: ''
+    },
+    theme = {
+        header: chalk.dim.gray,
+        type: chalk.yellow,
+        dependenciesHighlight: chalk.bold,
+        regular: chalk.white,
+        title: chalk.white.underline,
+    }) {
+    const columns = columnify(arr, {
+        preserveNewLines: true,
+        headingTransform: function (h) {
+            return theme.header(h.toLowerCase());
+        },
+        config: {
+            errors: {
+                headingTransform: function () {
+                    return symbols.error;
+                },
+                minWidth: 3,
+            },
+            warnings: {
+                headingTransform: function () {
+                    return symbols.warning;
+                },
+                minWidth: 3,
+            },
+            type: {
+                dataTransform: function (v) {
+                    return theme.type(v);
+                },
+            },
+            dependencies: {
+                dataTransform: function (v) {
+                    if (v > 0) {
+                        return theme.dependenciesHighlight(v);
+                    }
+                    return theme.regular(v);
+                },
+                headingTransform: function (h) {
+                    return theme.header('deps');
+                },
+            }
+        }
+    });
+
+    if (options.title) {
+        log(theme.title(options.title));
+    }
+    log(indentString(columns, 2));
+    log('');
 }
 
 function footer() {
@@ -660,11 +748,59 @@ class TracePlugin extends HookMaster {
         this.compiler.afterCompile((compilation) => {
             header('compiler', 'afterCompile');
 
+            debugger;
+            // additionalChunkAssets - []
+            // assets - {}
+            // entrypoints - map
+            // errors
+            // fileDependencies - set
+            // entries - []
+            // entrypoints - map
+
+            // fullHash
+            // hash
+            // missingDependencies - set
+            // modules - []
+            // name
+            // options
+            // optimizations
+            // plugins
+            // outputOptions
+            // records
+            // warnings
+
+            if (compilation.modules && compilation.modules.length > 0) {
+                const modules = compilation.modules.map(m => {
+                    const module = {
+                        type: m.type,
+                        dependencies: m.dependencies.length,
+                        id: m.id,
+                    };
+
+                    if (m.warnings && m.warnings.length > 0) {
+                        module.warnings = m.warnings.join('\n');
+                    }
+
+                    if (m.errors && m.errors.length > 0) {
+                        module.errors = m.errors.join('\n');
+                    }
+                    
+                    return module;
+                });
+
+                table(modules, {
+                    title: 'Modules',
+                });
+            }
+
+
             if (compilation.assets) {
-                const asset = chalk.italic.cyan;
-                for (const p of Object.keys(compilation.assets)) {
-                    log(`  ${asset(p)}`);
-                }
+                list(
+                    Object.keys(compilation.assets),
+                    {
+                        title: 'Assets'
+                    }
+                );
             }
 
             footer();
