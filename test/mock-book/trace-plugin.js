@@ -691,64 +691,59 @@ class TracePlugin extends HookMaster {
             this.compilationTrace.apply(compilation);
         });
 
-        compiler.hooks.compilation.tap(PLUGIN, (compilation, params) => {
+        this.compiler.compilation((compilation, params) => {
             header('compiler', 'compilation');
             footer();
         });
 
-        compiler.hooks.shouldEmit.tap(PLUGIN, (compilation) => {
+        this.compiler.shouldEmit((compilation) => {
             header('compiler', 'shouldEmit');
             footer();
         });
 
-        compiler.hooks.additionalPass.tapAsync(PLUGIN, (cb) => {
-            header('compiler', 'shouldEmit');
+        this.compiler.additionalPass(() => {
+            header('compiler', 'additionalPass');
             footer();
-            return cb();
         });
 
-        compiler.hooks.beforeRun.tapAsync(PLUGIN, (compiler, cb) => {
+        this.compiler.beforeRun((compiler) => {
             header('compiler', 'beforeRun');
             footer();
-            return cb();
         });
 
-        compiler.hooks.run.tapAsync(PLUGIN, (compiler, cb) => {
+        this.compiler.run((compiler) => {
             header('compiler', 'run');
             footer();
-            return cb();
         });
 
-        compiler.hooks.emit.tapAsync(PLUGIN, (compilation, cb) => {
+        this.compiler.emit((compilation) => {
             header('compiler', 'emit');
             footer();
-            return cb();
         });
 
-        compiler.hooks.afterEmit.tapAsync(PLUGIN, (compilation, cb) => {
+        this.compiler.afterEmit((compilation) => {
             header('compiler', 'afterEmit');
             footer();
-            return cb();
         });
 
-        compiler.hooks.normalModuleFactory.tap(PLUGIN, (factory) => {
+        this.compiler.normalModuleFactory((factory) => {
             header('compiler', 'normalModuleFactory');
             footer();
         });
 
-        compiler.hooks.contextModuleFactory.tap(PLUGIN, (factory) => {
+        this.compiler.contextModuleFactory((factory) => {
             header('compiler', 'contextModuleFactory');
             footer();
         });
 
-        compiler.hooks.make.tapAsync(PLUGIN, (compilation, cb) => {
+        this.compiler.make((compilation) => {
             header('compiler', 'make');
             footer();
-            return cb();
         });
 
-        compiler.hooks.failed.tap(PLUGIN, (err) => {
+        this.compiler.failed((err) => {
             header('compiler', 'failed');
+            log(`  ${err}`);
             footer();
         });
     }
