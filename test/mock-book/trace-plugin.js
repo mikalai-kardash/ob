@@ -2,12 +2,10 @@
 
 const chalk = require('chalk');
 const figures = require('figures');
-const template = require('lodash').template;
+const _ = require('lodash');
 const columnify = require('columnify');
 const symbols = require('log-symbols');
 const indentString = require('indent-string');
-
-// const symbols = require('log-symbols');
 
 const PLUGIN = 'TracePlugin';
 const log = console.log;
@@ -19,7 +17,10 @@ const DEFAULT_OPTIONS = {
             // all: true,
             // beforeCompile: true,
             // compile: true,
-            afterCompile: true,
+            // afterCompile: {
+            //     modules: true,
+            //     assets: true
+            // },
             // done: true,
             // thisCompilation: true,
             // compilation: true,
@@ -36,14 +37,26 @@ const DEFAULT_OPTIONS = {
         },
         compilation: {
             // all: true,
+            // buildModule: {
+            //     issuer: true
+            // },
+            // rebuildModule: {},
+            // failedModule: {},
+            // succeedModule: {},
         },
     }
 };
 
 const DEFAULT_THEME = {
     event: chalk.bgBlack,
-    eventTarget: chalk.cyan.bold,
+    eventTarget: chalk.cyanBright.bold,
     eventSource: chalk.bgWhite.black.bold,
+};
+
+const COMPILATION_THEME = {
+    event: chalk.bgBlack,
+    eventTarget: chalk.cyanBright.bold,
+    eventSource: chalk.bgYellow.black.bold,
 };
 
 function header(target, event, theme = DEFAULT_THEME) {
@@ -55,42 +68,75 @@ function header(target, event, theme = DEFAULT_THEME) {
 
 function list(arr, options = { title: '' }, theme = {
     title: chalk.underline,
-    regular: chalk.magenta
+    regular: chalk.blue.dim,
+    item: chalk.italic,
+    indentation: 2
 }) {
-    const render = template(`<% _.each(list, function(item) { %><%= bullet %> <%= theme.regular(item) %>\n<% }); %>`);
+    const render = _.template(
+        `
+            <% _.each(list, function(item) { 
+                %><%= bullet %> <%= theme.item(item) %>\n<% 
+            }); %>
+        `.trim()
+    );
 
     if (options.title) {
         log(theme.title(options.title));
     }
 
-    log(indentString(render({
-        list: arr,
-        bullet: figures.bullet,
-        theme,
-        options,
-    }), 2));
+    log(
+        indentString(
+            theme.regular(
+                render({
+                    list: arr,
+                    bullet: figures.bullet,
+                    theme,
+                    options,
+                }),
+            ),
+            theme.indentation
+        )
+    );
 
     log('');
 }
 
 function table(
     arr,
-    options = {
-        title: ''
-    },
+    options = {},
     theme = {
         header: chalk.dim.gray,
         type: chalk.yellow,
         dependenciesHighlight: chalk.bold,
         regular: chalk.white,
         title: chalk.white.underline,
+        key: chalk.white.dim,
+        value: chalk.greenBright,
     }) {
+
+    const opts = _.assign({
+        showHeaders: true,
+        title: '',
+        indentation: 2
+    }, options);
+
     const columns = columnify(arr, {
         preserveNewLines: true,
+        showHeaders: opts.showHeaders,
         headingTransform: function (h) {
             return theme.header(h.toLowerCase());
         },
         config: {
+            key: {
+                dataTransform: function (d) {
+                    return theme.key(d);
+                },
+            },
+            value: {
+                dataTransform: function (d) {
+                    return theme.value(d);
+                },
+            },
             errors: {
                 headingTransform: function () {
                     return symbols.error;
@@ -122,15 +168,143 @@ function table(
         }
     });
 
-    if (options.title) {
-        log(theme.title(options.title));
+    if (opts.title) {
+        log(theme.title(opts.title));
     }
-    log(indentString(columns, 2));
+    log(indentString(columns, opts.indentation));
     log('');
 }
 
 function footer() {
     log('');
+}
+
+function setProperty(source, target, prop, accessors = {}) {
+    const val = source[prop];
+
+    if (typeof val === "undefined") return;
+    if (typeof val === "function") return;
+
+    if (typeof val === "string" ||
+        typeof val === "number" ||
+        typeof val === "boolean"
+    ) {
+        target[prop] = val;
+        return;
+    }
+
+    if (typeof val === "object") {
+        if (val === null) return;
+
+        if (accessors[prop] && val) {
+            target[prop] = accessors[prop](val);
+        }
+
+        // array
+        if (val && val.length) {
+            if (val.length > 0) {
+                target[prop] = val.length;
+            }
+            return;
+        }
+
+        // map or set
+        if (val && val.size) {
+            if (val.size > 0) {
+                target[prop] = val.size;
+            }
+            return;
+        }
+
+        // object-map
+        const keys = Object.keys(val);
+        if (keys.length === 0) return;
+        target[prop] = keys.length;
+        return;
+    }
+};
+
+function getSummary(source, properties, accessors = {}) {
+    const target = {};
+
+    _.each(properties, function (property) {
+        setProperty(source, target, property, accessors);
+    });
+
+    const withSortedKeys = _.fromPairs(
+        _.sortBy(
+            _.toPairs(target),
+        )
+    );
+
+    return withSortedKeys;
+}
+
+function describeCompilation(compilation, options) {
+    const opts = _.assign({}, options);
+
+    const summary = getSummary(compilation, [
+        'additionalChunkAssets',
+        'children',
+        'chunkGroups',
+        'chunks',
+        'compilationDependencies',
+        'dependencyFactories',
+        'dependencyTemplates',
+        'entries',
+        'entrypoints',
+        'errors',
+        'fileDependencies',
+        'fullHash',
+        'hash',
+        'namedChunks',
+        'namedChunkGroups',
+        'warnings',
+        'modules',
+        'assets',
+        'missingDependencies',
+    ]);
+
+    log('');
+    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Compilation'));
+
+    table(summary, { title: 'Summary', showHeaders: false });
+
+    if (opts.modules) {
+        if (compilation.modules && compilation.modules.length > 0) {
+            const modules = compilation.modules.map(m => {
+                const module = {
+                    type: m.type,
+                    dependencies: m.dependencies.length,
+                    id: m.id,
+                };
+
+                if (m.warnings && m.warnings.length > 0) {
+                    module.warnings = m.warnings.join('\n');
+                }
+
+                if (m.errors && m.errors.length > 0) {
+                    module.errors = m.errors.join('\n');
+                }
+
+                return module;
+            });
+
+            table(modules, {
+                title: 'Modules',
+            });
+        }
+    }
+
+    if (opts.assets) {
+        if (compilation.assets) {
+            list(Object.keys(compilation.assets), {
+                title: 'Assets'
+            });
+        }
+    }
+
+    log(chalk.bgBlack(`  `));
 }
 
 function describeCompilationDependencies(compilationDependencies) {
@@ -142,9 +316,60 @@ function describeCompilationDependencies(compilationDependencies) {
     log(`  ${dependencies}`);
 }
 
-function describeModule(module) {
-    log(`  ${module.resource}`);
-    log(`  ${module.type}`);
+function describeModule(module, options) {
+
+    const opts = _.assign({
+        issuer: false,
+    }, options);
+
+    const properties = [
+        'context',
+        'errors',
+        'dependencies',
+        'buildTimestamp',
+        'built',
+        'context',
+        'depth',
+        'error',
+        'errors',
+        'factoryMeta',
+        'rawRequest',
+        'type',
+        'warnings',
+        'variables',
+        'reasons',
+        'binary',
+        'optimizationBailout',
+        'resource',
+        'issuer',
+        'loaders',
+        'useSourceMap',
+    ];
+
+    const accessors = {
+        issuer: function (m) { return m.rawRequest; },
+    };
+
+    const summary = getSummary(module, properties, accessors);
+
+    log('');
+    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Module'));
+
+    table(summary, {
+        showHeaders: false,
+        title: 'Summary'
+    });
+
+    if (opts.issuer && module.issuer) {
+        const issuerSummary = getSummary(module.issuer, properties, accessors);
+
+        table(issuerSummary, {
+            showHeaders: false,
+            title: 'Issuer'
+        });
+    }
+
+    log(chalk.bgBlack(`  `));
 }
 
 const noop = function () { };
@@ -324,34 +549,32 @@ class TraceCompilation extends HookMaster {
             );
         }
 
-        this.compilation.buildModule((module) => {
-            header('compilation', 'buildModule');
-            describeModule(module);
+        this.compilation.buildModule(function (module) {
+            header('compilation', 'buildModule (module)', COMPILATION_THEME);
+            describeModule(module, this.options);
             footer();
         });
 
-        this.compilation.rebuildModule((module) => {
-            header('compilation', 'rebuildModule');
-            describeModule(module);
+        this.compilation.rebuildModule(function (module) {
+            header('compilation', 'rebuildModule (module)', COMPILATION_THEME);
+            describeModule(module, this.options);
             footer();
         });
 
-        this.compilation.succeedModule((module) => {
-            header('compilation', 'succeedModule');
-            describeModule(module);
+        this.compilation.succeedModule(function (module) {
+            header('compilation', 'succeedModule (module)', COMPILATION_THEME);
+            describeModule(module, this.options);
             footer();
         });
 
-        this.compilation.failedModule((module, err) => {
-            header('compilation', 'failedModule');
-            describeModule(module);
-            log(`  ${err}`);
+        this.compilation.failedModule(function (module, err) {
+            header('compilation', 'failedModule (module, error)', COMPILATION_THEME);
+            describeModule(module, this.options);
             footer();
         });
 
-        this.compilation.finishModules((modules) => {
+        this.compilation.finishModules(function (modules) {
             header('compilation', 'finishModules');
-            log(`  ${modules.length} modules`);
             footer();
         });
 
@@ -745,64 +968,9 @@ class TracePlugin extends HookMaster {
             footer();
         });
 
-        this.compiler.afterCompile((compilation) => {
-            header('compiler', 'afterCompile');
-
-            debugger;
-            // additionalChunkAssets - []
-            // assets - {}
-            // entrypoints - map
-            // errors
-            // fileDependencies - set
-            // entries - []
-            // entrypoints - map
-
-            // fullHash
-            // hash
-            // missingDependencies - set
-            // modules - []
-            // name
-            // options
-            // optimizations
-            // plugins
-            // outputOptions
-            // records
-            // warnings
-
-            if (compilation.modules && compilation.modules.length > 0) {
-                const modules = compilation.modules.map(m => {
-                    const module = {
-                        type: m.type,
-                        dependencies: m.dependencies.length,
-                        id: m.id,
-                    };
-
-                    if (m.warnings && m.warnings.length > 0) {
-                        module.warnings = m.warnings.join('\n');
-                    }
-
-                    if (m.errors && m.errors.length > 0) {
-                        module.errors = m.errors.join('\n');
-                    }
-                    
-                    return module;
-                });
-
-                table(modules, {
-                    title: 'Modules',
-                });
-            }
-
-
-            if (compilation.assets) {
-                list(
-                    Object.keys(compilation.assets),
-                    {
-                        title: 'Assets'
-                    }
-                );
-            }
-
+        this.compiler.afterCompile(function (compilation) {
+            header('compiler', 'afterCompile (compilation)');
+            describeCompilation(compilation, this.options);
             footer();
         });
 
@@ -886,6 +1054,5 @@ class TracePlugin extends HookMaster {
 }
 
 // todo: can we compare compilation between events and show diff?
-// todo: color coding for diff tapable objects - compiler, compilation, etc.
 
 module.exports = TracePlugin;

@@ -6,7 +6,6 @@
         "./license",
         "./pages/page1",
         "./pages/page2",
-        "./pages/toc",
         {
             "title": "Chapter 1",
             "index": "./chapters/ch01/index"

@@ -93,7 +93,7 @@
 /*! exports provided: $schema, cover, license, pages, @metadata, default */
 /***/ (function(module) {
 
-eval("module.exports = {\"$schema\":\"\",\"cover\":{\"index\":\"./pages/cover.md\",\"title\":\"cover\"},\"license\":{\"index\":\"./license.md\",\"title\":\"license\"},\"pages\":[{\"index\":\"./license.md\",\"title\":\"license\"},{\"index\":\"./pages/page1.md\",\"title\":\"page1\"},{\"index\":\"./pages/page2.md\",\"title\":\"page2\"},{\"index\":\"./pages/toc.md\",\"title\":\"toc\"},{\"title\":\"Chapter 1\",\"index\":\"./chapters/ch01/index.md\"}],\"@metadata\":{\"title\":\"Algorithms\",\"version\":\"0.1.0\",\"pages\":\"markdown\",\"authors\":[\"Umesh Vazirani <vazirani@cs.berkeley.edu>\"]}};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvYm9vay5qc29uLmpzIiwic291cmNlcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/book.json\n");
+eval("module.exports = {\"$schema\":\"\",\"cover\":{\"index\":\"./pages/cover.md\",\"title\":\"cover\"},\"license\":{\"index\":\"./license.md\",\"title\":\"license\"},\"pages\":[{\"index\":\"./license.md\",\"title\":\"license\"},{\"index\":\"./pages/page1.md\",\"title\":\"page1\"},{\"index\":\"./pages/page2.md\",\"title\":\"page2\"},{\"title\":\"Chapter 1\",\"index\":\"./chapters/ch01/index.md\"}],\"@metadata\":{\"title\":\"Algorithms\",\"version\":\"0.1.0\",\"pages\":\"markdown\",\"authors\":[\"Umesh Vazirani <vazirani@cs.berkeley.edu>\"]}};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvYm9vay5qc29uLmpzIiwic291cmNlcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/book.json\n");
 
 /***/ })
 
