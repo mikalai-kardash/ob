@@ -27,7 +27,7 @@ const DEFAULT_OPTIONS = {
             // failed: true
         },
         compilation: {
-            all: true,
+            // all: true,
         },
     }
 };
