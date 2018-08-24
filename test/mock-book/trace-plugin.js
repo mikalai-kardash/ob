@@ -43,6 +43,11 @@ const DEFAULT_OPTIONS = {
             // rebuildModule: {},
             // failedModule: {},
             // succeedModule: {},
+            dependencyReference: {
+                reference: {},
+                dependency: {},
+                module: {},
+            },
         },
     }
 };
@@ -189,6 +194,8 @@ function setProperty(source, target, prop, accessors = {}) {
         typeof val === "number" ||
         typeof val === "boolean"
     ) {
+        if (val === NaN) return;
+
         target[prop] = val;
         return;
     }
@@ -578,9 +585,50 @@ class TraceCompilation extends HookMaster {
             footer();
         });
 
-        this.compilation.dependencyReference((reference, dependency, module) => {
+        this.compilation.dependencyReference(function (reference, dependency, module) {
+
+
+
+            const ref = getSummary(
+                reference,
+                [
+                    'importedNames',
+                    'order',
+                    'weak',
+                    'module',
+                ],
+                {
+                    module: function (m) { return m.rawRequest; }
+                },
+            );
+
+            const dep = getSummary(
+                dependency,
+                [
+                    'request',
+                    'module',
+                ],
+                {
+                    module: function (m) { return m.rawRequest; }
+                },
+            );
+
             header('compilation', 'dependencyReference');
-            log(`  ${module.resource} > ${dependency.request}`);
+
+            log('');
+            log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Reference'));
+
+            table(ref, {
+                showHeaders: false,
+            });
+
+            log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Dependency'));
+
+            table(dep, {
+                showHeaders: false,
+            });
+
+            describeModule(module, this.options.module);
             footer();
         });
 
