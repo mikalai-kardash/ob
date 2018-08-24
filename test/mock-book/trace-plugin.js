@@ -30,7 +30,7 @@ const DEFAULT_OPTIONS = {
             // run: true,
             // emit: true,
             // afterEmit: true,
-            // normalModuleFactory: true,
+            normalModuleFactory: true,
             // contextModuleFactory: true,
             // make: true,
             // failed: true
@@ -42,12 +42,15 @@ const DEFAULT_OPTIONS = {
             // },
             // rebuildModule: {},
             // failedModule: {},
-            // succeedModule: {},
-            dependencyReference: {
-                reference: {},
-                dependency: {},
-                module: {},
-            },
+            // succeedModule: {
+            //     buildInfo: true
+            // },
+            // dependencyReference: {
+            //     reference: {},
+            //     dependency: {},
+            //     module: {},
+            // },
+            // finishModules: {},
         },
     }
 };
@@ -125,58 +128,63 @@ function table(
         indentation: 2
     }, options);
 
-    const columns = columnify(arr, {
-        preserveNewLines: true,
-        showHeaders: opts.showHeaders,
-        headingTransform: function (h) {
-            return theme.header(h.toLowerCase());
-        },
-        config: {
-            key: {
-                dataTransform: function (d) {
-                    return theme.key(d);
-                },
+    try {
+        const columns = columnify(arr, {
+            preserveNewLines: true,
+            showHeaders: opts.showHeaders,
+            headingTransform: function (h) {
+                return theme.header(h.toLowerCase());
             },
-            value: {
-                dataTransform: function (d) {
-                    return theme.value(d);
+            config: {
+                key: {
+                    dataTransform: function (d) {
+                        return theme.key(d);
+                    },
                 },
-            },
-            errors: {
-                headingTransform: function () {
-                    return symbols.error;
+                value: {
+                    dataTransform: function (d) {
+                        return theme.value(d);
+                    },
                 },
-                minWidth: 3,
-            },
-            warnings: {
-                headingTransform: function () {
-                    return symbols.warning;
+                errors: {
+                    headingTransform: function () {
+                        return symbols.error;
+                    },
+                    minWidth: 3,
                 },
-                minWidth: 3,
-            },
-            type: {
-                dataTransform: function (v) {
-                    return theme.type(v);
+                warnings: {
+                    headingTransform: function () {
+                        return symbols.warning;
+                    },
+                    minWidth: 3,
                 },
-            },
-            dependencies: {
-                dataTransform: function (v) {
-                    if (v > 0) {
-                        return theme.dependenciesHighlight(v);
-                    }
-                    return theme.regular(v);
+                type: {
+                    dataTransform: function (v) {
+                        return theme.type(v);
+                    },
                 },
-                headingTransform: function (h) {
-                    return theme.header('deps');
-                },
+                dependencies: {
+                    dataTransform: function (v) {
+                        if (v > 0) {
+                            return theme.dependenciesHighlight(v);
+                        }
+                        return theme.regular(v);
+                    },
+                    headingTransform: function (h) {
+                        return theme.header('deps');
+                    },
+                }
             }
-        }
-    });
+        });
 
-    if (opts.title) {
-        log(theme.title(opts.title));
+        if (opts.title) {
+            log(theme.title(opts.title));
+        }
+        log(indentString(columns, opts.indentation));
+    } catch (e) {
+        throw new Error(`Unable to convert to table ${arr}: ${e}.`);
     }
-    log(indentString(columns, opts.indentation));
+
     log('');
 }
 
@@ -194,7 +202,7 @@ function setProperty(source, target, prop, accessors = {}) {
         typeof val === "number" ||
         typeof val === "boolean"
     ) {
-        if (val === NaN) return;
+        if (isNaN(val)) return;
 
         target[prop] = val;
         return;
@@ -205,6 +213,7 @@ function setProperty(source, target, prop, accessors = {}) {
 
         if (accessors[prop] && val) {
             target[prop] = accessors[prop](val);
+            return;
         }
 
         // array
@@ -327,6 +336,7 @@ function describeModule(module, options) {
 
     const opts = _.assign({
         issuer: false,
+        title: 'Module'
     }, options);
 
     const properties = [
@@ -360,12 +370,92 @@ function describeModule(module, options) {
     const summary = getSummary(module, properties, accessors);
 
     log('');
-    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Module'));
+    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold(opts.title));
+
+    const getSetValues = function (set) {
+        if (set.size === 0) {
+            return "None";
+        }
+        const arr = Array.from(set);
+        if (set.size === 1) {
+            return arr[0];
+        }
+        return arr.join('\n');
+    };
+
+    const buildInfo = getSummary(
+        module.buildInfo,
+        [
+            'contextDependencies',
+            'fileDependencies',
+            'cacheable',
+            'assets',
+        ],
+        {
+            contextDependencies: s => getSetValues(s),
+            fileDependencies: s => getSetValues(s),
+            assets: o => Object.keys(o).join('\n'),
+        }
+    );
+
+    const dependencies = module.dependencies.map(function (dep) {
+        return _.assign(
+            {
+                class: dep.constructor.name,
+            },
+            getSummary(
+                dep,
+                [
+                    'optional',
+                    'weak',
+                    'name',
+                    'exports',
+                    'type',
+                    'expression',
+                    'module',
+                ],
+                {
+                    module: m => m.rawRequest,
+                    exports: e => e.join('\n'),
+                }
+            ));
+    });
+
+    // factoryMeta
+
+    const loaders = module.loaders
+        .map(l => l.loader)
+        .map(n => /(\w*)-loader/i.exec(n))
+        .filter(v => v !== null)
+        .map(r => r[0]);
+    ;
+
+    debugger;
 
     table(summary, {
         showHeaders: false,
         title: 'Summary'
     });
+
+
+    if (opts.buildInfo && module.buildInfo) {
+        table(buildInfo, {
+            showHeaders: false,
+            title: 'Build Info',
+        });
+    }
+
+    if (opts.loaders && module.loaders && module.loaders.length > 0) {
+        list(loaders, {
+            title: 'Loaders'
+        });
+    }
+
+    if (opts.dependencies && module.dependencies && module.dependencies > 0) {
+        table(dependencies, {
+            title: 'Dependencies',
+        });
+    }
 
     if (opts.issuer && module.issuer) {
         const issuerSummary = getSummary(module.issuer, properties, accessors);
@@ -375,6 +465,53 @@ function describeModule(module, options) {
             title: 'Issuer'
         });
     }
+
+    log(chalk.bgBlack(`  `));
+}
+
+function describeReference(reference, options = {}) {
+    const opts = _.assign({}, options);
+    const ref = getSummary(
+        reference,
+        [
+            'importedNames',
+            'order',
+            'weak',
+            'module',
+        ],
+        {
+            module: function (m) { return m.rawRequest; }
+        },
+    );
+
+    log('');
+    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Reference'));
+
+    table(ref, {
+        showHeaders: false,
+    });
+
+    log(chalk.bgBlack(`  `));
+}
+
+function describeDependency(dependency, options) {
+    const opts = _.assign({}, options);
+    const dep = getSummary(
+        dependency,
+        [
+            'request',
+            'module',
+        ],
+        {
+            module: function (m) { return m.rawRequest; }
+        },
+    );
+
+    log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Dependency'));
+
+    table(dep, {
+        showHeaders: false,
+    });
 
     log(chalk.bgBlack(`  `));
 }
@@ -581,358 +718,330 @@ class TraceCompilation extends HookMaster {
         });
 
         this.compilation.finishModules(function (modules) {
-            header('compilation', 'finishModules');
+            header('compilation', 'finishModules (module[])', COMPILATION_THEME);
+
+            for (const module of modules) {
+                const o = _.assign({
+                    title: module.rawRequest,
+                }, this.options);
+
+                describeModule(module, o);
+            }
+
             footer();
         });
 
         this.compilation.dependencyReference(function (reference, dependency, module) {
+            header('compilation', 'dependencyReference', COMPILATION_THEME);
 
-
-
-            const ref = getSummary(
-                reference,
-                [
-                    'importedNames',
-                    'order',
-                    'weak',
-                    'module',
-                ],
-                {
-                    module: function (m) { return m.rawRequest; }
-                },
-            );
-
-            const dep = getSummary(
-                dependency,
-                [
-                    'request',
-                    'module',
-                ],
-                {
-                    module: function (m) { return m.rawRequest; }
-                },
-            );
-
-            header('compilation', 'dependencyReference');
-
-            log('');
-            log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Reference'));
-
-            table(ref, {
-                showHeaders: false,
-            });
-
-            log(chalk.bgRed(`  `) + ' ' + chalk.red.bold('Dependency'));
-
-            table(dep, {
-                showHeaders: false,
-            });
-
+            describeReference(reference, this.options.reference);
+            describeDependency(dependency, this.options.dependency);
             describeModule(module, this.options.module);
+
             footer();
         });
 
-        this.compilation.seal(() => {
-            header('compilation', 'seal');
+        this.compilation.seal(function () {
+            header('compilation', 'seal', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.unseal(() => {
-            header('compilation', 'unseal');
+            header('compilation', 'unseal', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.finishRebuildingModule((module) => {
-            header('compilation', 'finishRebuildingModule');
+            header('compilation', 'finishRebuildingModule', COMPILATION_THEME);
             describeModule(module);
             footer();
         });
 
         this.compilation.beforeChunks(() => {
-            header('compilation', 'beforeChunks');
+            header('compilation', 'beforeChunks', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterChunks((chunks) => {
-            header('compilation', 'afterChunks');
+            header('compilation', 'afterChunks', COMPILATION_THEME);
             log(`  ${chunks.length} chunks`);
             footer();
         });
 
         this.compilation.optimizeDependenciesBasic((modules) => {
-            header('compilation', 'optimizeDependenciesBasic');
+            header('compilation', 'optimizeDependenciesBasic', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.optimizeDependencies((modules) => {
-            header('compilation', 'optimizeDependencies');
+            header('compilation', 'optimizeDependencies', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.optimizeDependenciesAdvanced((modules) => {
-            header('compilation', 'optimizeDependenciesAdvanced');
+            header('compilation', 'optimizeDependenciesAdvanced', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.afterOptimizeDependencies((modules) => {
-            header('compilation', 'afterOptimizeDependencies');
+            header('compilation', 'afterOptimizeDependencies', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.optimize(() => {
-            header('compilation', 'optimize');
+            header('compilation', 'optimize', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeModulesBasic((modules) => {
-            header('compilation', 'optimizeModulesBasic');
+            header('compilation', 'optimizeModulesBasic', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.optimizeModules((modules) => {
-            header('compilation', 'optimizeModules');
+            header('compilation', 'optimizeModules', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.afterOptimizeModules((modules) => {
-            header('compilation', 'afterOptimizeModules');
+            header('compilation', 'afterOptimizeModules', COMPILATION_THEME);
             log(`  ${modules.length} modules`);
             footer();
         });
 
         this.compilation.optimizeChunksBasic((chunks, chunkGroups) => {
-            header('compilation', 'optimizeChunksBasic');
+            header('compilation', 'optimizeChunksBasic', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunks((chunks, chunkGroups) => {
-            header('compilation', 'optimizeChunks');
+            header('compilation', 'optimizeChunks', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunksAdvanced((chunks, chunkGroups) => {
-            header('compilation', 'optimizeChunksAdvanced');
+            header('compilation', 'optimizeChunksAdvanced', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeChunks((chunks, chunkGroups) => {
-            header('compilation', 'afterOptimizeChunks');
+            header('compilation', 'afterOptimizeChunks', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeTree((chunks, modules) => {
-            header('compilation', 'afterOptimizeTree');
+            header('compilation', 'afterOptimizeTree', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkModulesBasic((chunks, modules) => {
-            header('compilation', 'optimizeChunkModulesBasic');
+            header('compilation', 'optimizeChunkModulesBasic', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkModules((chunks, modules) => {
-            header('compilation', 'optimizeChunkModules');
+            header('compilation', 'optimizeChunkModules', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkModulesAdvanced((chunks, modules) => {
-            header('compilation', 'optimizeChunkModulesAdvanced');
+            header('compilation', 'optimizeChunkModulesAdvanced', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeChunkModules((chunks, modules) => {
-            header('compilation', 'afterOptimizeChunkModules');
+            header('compilation', 'afterOptimizeChunkModules', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.shouldRecord(() => {
-            header('compilation', 'shouldRecord');
+            header('compilation', 'shouldRecord', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.reviveModules((modules, records) => {
-            header('compilation', 'reviveModules');
+            header('compilation', 'reviveModules', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeModuleOrder((modules) => {
-            header('compilation', 'optimizeModuleOrder');
+            header('compilation', 'optimizeModuleOrder', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.advancedOptimizeModuleOrder((modules) => {
-            header('compilation', 'advancedOptimizeModuleOrder');
+            header('compilation', 'advancedOptimizeModuleOrder', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.beforeModuleIds((modules) => {
-            header('compilation', 'beforeModuleIds');
+            header('compilation', 'beforeModuleIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.moduleIds((modules) => {
-            header('compilation', 'moduleIds');
+            header('compilation', 'moduleIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeModuleIds((modules) => {
-            header('compilation', 'optimizeModuleIds');
+            header('compilation', 'optimizeModuleIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeModuleIds((modules) => {
-            header('compilation', 'afterOptimizeModuleIds');
+            header('compilation', 'afterOptimizeModuleIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.reviveChunks((chunks, records) => {
-            header('compilation', 'reviveChunks');
+            header('compilation', 'reviveChunks', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkOrder((chunks) => {
-            header('compilation', 'optimizeChunkOrder');
+            header('compilation', 'optimizeChunkOrder', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.beforeChunkIds((chunks) => {
-            header('compilation', 'beforeChunkIds');
+            header('compilation', 'beforeChunkIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkIds((chunks) => {
-            header('compilation', 'optimizeChunkIds');
+            header('compilation', 'optimizeChunkIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeChunkIds((chunks) => {
-            header('compilation', 'afterOptimizeChunkIds');
+            header('compilation', 'afterOptimizeChunkIds', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.recordModules((modules, records) => {
-            header('compilation', 'recordModules');
+            header('compilation', 'recordModules', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.recordChunks((modules, records) => {
-            header('compilation', 'recordChunks');
+            header('compilation', 'recordChunks', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.beforeHash(() => {
-            header('compilation', 'beforeHash');
+            header('compilation', 'beforeHash', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.contentHash((chunk) => {
-            header('compilation', 'contentHash');
+            header('compilation', 'contentHash', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterHash((chunk) => {
-            header('compilation', 'afterHash');
+            header('compilation', 'afterHash', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.recordHash((record) => {
-            header('compilation', 'recordHash');
+            header('compilation', 'recordHash', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.record((compilation, records) => {
-            header('compilation', 'record');
+            header('compilation', 'record', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.beforeModuleAssets(() => {
-            header('compilation', 'beforeModuleAssets');
+            header('compilation', 'beforeModuleAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.shouldGenerateChunkAssets(() => {
-            header('compilation', 'shouldGenerateChunkAssets');
+            header('compilation', 'shouldGenerateChunkAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.beforeChunkAssets(() => {
-            header('compilation', 'beforeChunkAssets');
+            header('compilation', 'beforeChunkAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.additionalChunkAssets((chunks) => {
-            header('compilation', 'additionalChunkAssets');
+            header('compilation', 'additionalChunkAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.additionalAssets(() => {
-            header('compilation', 'additionalAssets');
+            header('compilation', 'additionalAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeChunkAssets((chunks) => {
-            header('compilation', 'optimizeChunkAssets');
+            header('compilation', 'optimizeChunkAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeChunkAssets((chunks) => {
-            header('compilation', 'afterOptimizeChunkAssets');
+            header('compilation', 'afterOptimizeChunkAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.optimizeAssets((assets) => {
-            header('compilation', 'optimizeAssets');
+            header('compilation', 'optimizeAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterOptimizeAssets((assets) => {
-            header('compilation', 'afterOptimizeAssets');
+            header('compilation', 'afterOptimizeAssets', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.needAdditionalSeal(() => {
-            header('compilation', 'needAdditionalSeal');
+            header('compilation', 'needAdditionalSeal', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.afterSeal(() => {
-            header('compilation', 'afterSeal');
+            header('compilation', 'afterSeal', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.chunkHash((chunk, hash) => {
-            header('compilation', 'chunkHash');
+            header('compilation', 'chunkHash', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.moduleAsset((module, filename) => {
-            header('compilation', 'moduleAsset');
+            header('compilation', 'moduleAsset', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.chunkAsset((chunk, filename) => {
-            header('compilation', 'chunkAsset');
+            header('compilation', 'chunkAsset', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.assetPath((filename, data) => {
-            header('compilation', 'assetPath');
+            header('compilation', 'assetPath', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.needAdditionalPass(() => {
-            header('compilation', 'needAdditionalPass');
+            header('compilation', 'needAdditionalPass', COMPILATION_THEME);
             footer();
         });
 
         this.compilation.childCompiler((compiler, name, index) => {
-            header('compilation', 'childCompiler');
+            header('compilation', 'childCompiler', COMPILATION_THEME);
             log(`  ${name}`);
             footer();
         });
