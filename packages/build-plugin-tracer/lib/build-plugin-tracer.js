@@ -81,19 +81,20 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/book.json");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/book.json":
-/*!***********************!*\
-  !*** ./src/book.json ***!
-  \***********************/
-/*! exports provided: $schema, cover, license, pages, @metadata, default */
-/***/ (function(module) {
+/***/ "./src/index.ts":
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
 
-eval("module.exports = {\"$schema\":\"\",\"cover\":{\"index\":\"./pages/cover.md\",\"title\":\"cover\"},\"license\":{\"index\":\"./license.md\",\"title\":\"license\"},\"pages\":[{\"index\":\"./license.md\",\"title\":\"license\"},{\"index\":\"./pages/page1.md\",\"title\":\"page1\"},{\"index\":\"./pages/page2.md\",\"title\":\"page2\"},{\"title\":\"Chapter 1\",\"index\":\"./chapters/ch01/index.md\"}],\"@metadata\":{\"title\":\"Algorithms\",\"version\":\"0.1.0\",\"pages\":\"markdown\",\"authors\":[\"Umesh Vazirani <vazirani@cs.berkeley.edu>\"]}};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvYm9vay5qc29uLmpzIiwic291cmNlcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/book.json\n");
+"use strict";
+eval("\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar TracePlugin = /** @class */ (function () {\r\n    function TracePlugin() {\r\n    }\r\n    TracePlugin.prototype.Apply = function (compiler) {\r\n        compiler.hooks.done.tap('TracePlugin', function () {\r\n            // tslint:disable-next-line:no-console\r\n            console.log('Done!');\r\n        });\r\n    };\r\n    return TracePlugin;\r\n}());\r\nexports.TracePlugin = TracePlugin;\r\n\n\n//# sourceURL=webpack:///./src/index.ts?");
 
 /***/ })
 
