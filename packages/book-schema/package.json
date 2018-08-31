@@ -9,7 +9,7 @@
   "author": "Mikalai Kardash <mikalai.kardash@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "typescript": "3.0.1"
+    "typescript": "2.9.2"
   },
   "devDependencies": {
     "typescript-to-json-schema": "0.6.0"

@@ -1,0 +1,42 @@
+{
+  "name": "build-plugin-tracer",
+  "version": "0.0.0",
+  "description": "",
+  "author": "Mikalai Kardash <mikalai.kardash@gmail.com>",
+  "homepage": "https://github.com/mikalai-kardash/ob#readme",
+  "license": "ISC",
+  "main": "lib/build-plugin-tracer.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikalai-kardash/ob.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "columnify": "^1.5.4",
+    "figures": "^2.0.0",
+    "log-symbols": "^2.2.0"
+  },
+  "bugs": {
+    "url": "https://github.com/mikalai-kardash/ob/issues"
+  },
+  "devDependencies": {
+    "@types/chalk": "^2.2.0",
+    "@types/figures": "^2.0.0",
+    "@types/indent-string": "^3.0.0",
+    "@types/lodash": "^4.14.116",
+    "@types/log-symbols": "^2.0.0",
+    "@types/tapable": "^1.0.4",
+    "@types/webpack": "^4.4.11",
+    "tslint": "^5.11.0",
+    "typescript": "2.9.2"
+  }
+}

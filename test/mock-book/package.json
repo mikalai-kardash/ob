@@ -8,8 +8,8 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {},
   "dependencies": {
+    "build-plugin-tracer": "^0.0.0",
     "chalk": "^2.4.1",
     "clean-webpack-plugin": "^0.1.19",
     "columnify": "^1.5.4",
