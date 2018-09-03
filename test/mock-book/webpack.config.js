@@ -3,7 +3,7 @@
 const path = require('path');
 const BookPlugin = require('./book-plugin');
 const TracePlugin = require('./trace-plugin');
-const plugin2 = require('build-plugin-tracer');
+const plugin2 = require('build-plugin-tracer').TracePlugin;
 
 console.log(plugin2);
 

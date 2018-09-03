@@ -8,7 +8,9 @@ module.exports = {
 
     output: {
         filename: package.name + '.js',
-        path: path.join(__dirname, 'lib')
+        path: path.join(__dirname, 'lib'),
+        libraryTarget: 'commonjs2',
+        // libraryExport: 'TracePlugin'
     },
 
     module: {
