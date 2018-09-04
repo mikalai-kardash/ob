@@ -7,6 +7,8 @@ import { IHookSettings } from './models';
 
 interface IModuleDescription {
     issuer?: IModuleDescription;
+
+    rawRequest: string;
 }
 
 export function describeModule(module: compilation.Module, options: IHookSettings) {
@@ -41,7 +43,7 @@ export function describeModule(module: compilation.Module, options: IHookSetting
     ];
 
     const accessors = {
-        issuer(m: compilation.Module) { return m.rawRequest; },
+        issuer(m: IModuleDescription) { return m.rawRequest; },
     };
 
     const summary = getSummary(module, properties, accessors);
