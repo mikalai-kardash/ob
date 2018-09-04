@@ -67,6 +67,7 @@ const COMPILATION_THEME = {
     eventSource: chalk.bgYellow.black.bold,
 };
 
+// d
 function header(target, event, theme = DEFAULT_THEME) {
     const s = target.toUpperCase();
     const t = event;
@@ -74,6 +75,7 @@ function header(target, event, theme = DEFAULT_THEME) {
     log(theme.event(message));
 }
 
+// d
 function list(arr, options = { title: '' }, theme = {
     title: chalk.underline,
     regular: chalk.blue.dim,
@@ -109,6 +111,7 @@ function list(arr, options = { title: '' }, theme = {
     log('');
 }
 
+// d
 function table(
     arr,
     options = {},
@@ -188,10 +191,12 @@ function table(
     log('');
 }
 
+// d
 function footer() {
     log('');
 }
 
+// d
 function setProperty(source, target, prop, accessors = {}) {
     const val = source[prop];
 
@@ -240,6 +245,7 @@ function setProperty(source, target, prop, accessors = {}) {
     }
 };
 
+// d
 function getSummary(source, properties, accessors = {}) {
     const target = {};
 
@@ -256,6 +262,7 @@ function getSummary(source, properties, accessors = {}) {
     return withSortedKeys;
 }
 
+// d
 function describeCompilation(compilation, options) {
     const opts = _.assign({}, options);
 
@@ -323,6 +330,7 @@ function describeCompilation(compilation, options) {
     log(chalk.bgBlack(`  `));
 }
 
+// d
 function describeCompilationDependencies(compilationDependencies) {
     const n = compilationDependencies.size;
     const dependencies = n === 0
