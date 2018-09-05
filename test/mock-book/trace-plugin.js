@@ -340,6 +340,7 @@ function describeCompilationDependencies(compilationDependencies) {
     log(`  ${dependencies}`);
 }
 
+// d
 function describeModule(module, options) {
 
     const opts = _.assign({
@@ -477,6 +478,7 @@ function describeModule(module, options) {
     log(chalk.bgBlack(`  `));
 }
 
+// d
 function describeReference(reference, options = {}) {
     const opts = _.assign({}, options);
     const ref = getSummary(
@@ -502,6 +504,7 @@ function describeReference(reference, options = {}) {
     log(chalk.bgBlack(`  `));
 }
 
+// d
 function describeDependency(dependency, options) {
     const opts = _.assign({}, options);
     const dep = getSummary(
@@ -526,6 +529,7 @@ function describeDependency(dependency, options) {
 
 const noop = function () { };
 
+// d
 class HookMaster {
     constructor(name) {
         this.name = name;

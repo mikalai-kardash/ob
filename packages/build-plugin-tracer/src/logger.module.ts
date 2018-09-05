@@ -1,17 +1,10 @@
 import chalk from 'chalk';
 import * as _ from 'lodash';
-import { compilation } from 'webpack';
 import { getSummary } from './analisys';
 import { list, log, table } from './logger';
-import { IHookSettings } from './models';
+import { IHookSettings, IModuleDescription } from './models';
 
-interface IModuleDescription {
-    issuer?: IModuleDescription;
-
-    rawRequest: string;
-}
-
-export function describeModule(module: compilation.Module, options: IHookSettings) {
+export function describeModule(module: IModuleDescription, options: IHookSettings) {
 
     const opts = _.assign({
         issuer: false,
@@ -72,12 +65,16 @@ export function describeModule(module: compilation.Module, options: IHookSetting
         ],
         {
             assets: (o: any) => Object.keys(o).join('\n'),
-            contextDependencies: (s) => getSetValues(s),
-            fileDependencies: (s) => getSetValues(s),
+            contextDependencies(s: any) {
+                return getSetValues(s);
+            },
+            fileDependencies(s: any) {
+                return getSetValues(s);
+            },
         },
     );
 
-    const dependencies = module.dependencies.map(function (dep) {
+    const dependencies = module.dependencies.map((dep) => {
         return _.assign(
             {
                 class: dep.constructor.name,
@@ -94,8 +91,8 @@ export function describeModule(module: compilation.Module, options: IHookSetting
                     'module',
                 ],
                 {
-                    module: m => m.rawRequest,
-                    exports: e => e.join('\n'),
+                    exports(e: string[]) { return e.join('\n'); },
+                    module(m: IModuleDescription) { return m.rawRequest; },
                 },
             ));
     });
@@ -103,11 +100,13 @@ export function describeModule(module: compilation.Module, options: IHookSetting
     // factoryMeta
 
     const loaders = module.loaders
-        .map(l => l.loader)
-        .map(n => /(\w*)-loader/i.exec(n))
-        .filter(v => v !== null)
-        .map(r => r[0]);
-    ;
+        .map((l) => l.loader)
+        .map((n) => /(\w*)-loader/i.exec(n))
+        .filter((v) => v !== null)
+        .map((r) => {
+            if (r) { return r[0]; }
+            return '';
+        });
 
     table(summary, {
         showHeaders: false,
@@ -127,7 +126,7 @@ export function describeModule(module: compilation.Module, options: IHookSetting
         });
     }
 
-    if (opts.dependencies && module.dependencies && module.dependencies > 0) {
+    if (opts.dependencies && module.dependencies && module.dependencies.length > 0) {
         table(dependencies, {
             title: 'Dependencies',
         });
